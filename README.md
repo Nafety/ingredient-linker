@@ -72,6 +72,8 @@ python train.py             # QLoRA fine-tuning -> models/adapter/ + predictions
 python infer.py "paprikapulver" "glyserol" --lang en
 ```
 
+The trained adapter is on the Hugging Face Hub, so no training is needed: `python infer.py "glyserol" --adapter Nafety/off-ingredient-linker`. On first run it downloads the taxonomies and builds the index (a few minutes on CPU), without the product export.
+
 ```json
 {"name": "glyserol", "lang": "en", "type": "existing", "id": "en:e422", "entry": "en:e422 — E422 | Glycerol | Gliserol", "allergens": []}
 ```
