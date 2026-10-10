@@ -1,0 +1,6 @@
+.venv/
+.env
+data/
+models/
+wandb/
+__pycache__/
