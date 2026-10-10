@@ -20,19 +20,22 @@ For each unknown name, the model proposes one of four decisions:
 1. **Retrieval.** A multilingual embedding model (`multilingual-e5-small`) finds the 10 closest taxonomy entries, whatever their language, with a similarity score.
 2. **Decision.** Qwen2.5-1.5B-Instruct, fine-tuned with QLoRA, reads the name, the declared language, the surrounding list and the 10 candidates, then answers in JSON.
 
-**Training data** (37,214 examples, built automatically by `build_dataset.py`; a rebuild gives a few more or fewer "new" examples):
+**Training data** (41,420 examples, built automatically by `build_dataset.py`):
 
 | Source | Examples | Answer |
 |---|---:|---|
-| Links actually made by the OFF parser | 12,000 | existing |
-| Taxonomy names damaged on purpose (OCR errors, wrong declared language, percentages) | 12,000 | existing |
-| Taxonomy leaves hidden from the index | 2,214 | new + parent |
-| Unknown names picked by rules (nutrition tables, URLs, fragments…) | 9,000 | not_ingredient |
-| List phrases ("may contain", "contains 2% or less of"…) | 2,000 | structure |
+| Links actually made by the OFF parser | 11,838 | existing |
+| Taxonomy names damaged on purpose (OCR errors, wrong declared language, percentages) | 11,991 | existing |
+| Taxonomy names with a qualifier that changes nothing ("fresh almonds", "fromage italien") | 4,000 | existing |
+| Taxonomy leaves hidden from the index | 2,822 | new + parent |
+| Unknown names picked by rules (nutrition tables, URLs, fragments…) | 8,771 | not_ingredient |
+| List phrases ("may contain", "contains 2% or less of"…) | 1,998 | structure |
 
-**Test set** (`test_gold.jsonl`): 300 real unknown names, each present in at least 10 products. They are sampled by language from the export and annotated by hand; 293 are scored, and 7 uncertain ones are left out. None of them appears in the training data.
+**Test sets.** None of their names appears in the training data.
+- `test_gold.jsonl`: 300 real unknown names, each present in at least 10 products. They are sampled by language from the export and annotated by hand; 293 are scored, and 7 uncertain ones are left out.
+- `test_issues.jsonl`: the 49 names reported in issues [#14657](https://github.com/openfoodfacts/openfoodfacts-server/issues/14657) (US names, missing allergens) and [#14526](https://github.com/openfoodfacts/openfoodfacts-server/issues/14526) (Portuguese fortified wheat flour). They are evaluated against the taxonomy as it was before those issues were fixed (commit `5a011db`, 21 September 2026).
 
-**Training:** 20,000 examples, 1 epoch, LoRA rank 16 on every linear layer (18.5 M trainable parameters, 1.2 % of the model), base model in 4 bits. It takes about 3 h on an 8 GB laptop GPU (RTX 4060).
+**Training:** 30,000 examples, 1 epoch, LoRA rank 16 on every linear layer (18.5 M trainable parameters, 1.2 % of the model), base model in 4 bits. It takes about 4 h on an 8 GB laptop GPU (RTX 4060).
 
 ![Training curves](assets/training_curves.png)
 
@@ -45,21 +48,23 @@ For each unknown name, the model proposes one of four decisions:
 | Current OFF parser (by construction: these are its failures) | 0 % | 0 % | 0 % | 0 |
 | Best non-LLM baseline: exact match in any language > fuzzy match > retrieval | 70.6 % | 62.5 % | 68.6 % | 11 |
 | Qwen2.5-1.5B-Instruct, not fine-tuned | 37.5 % | 33.1 % | 40.0 % | 1 |
-| **Qwen2.5-1.5B-Instruct, fine-tuned** | **78.2 %** | **68.6 %** | **91.4 %** | **4** |
+| **Qwen2.5-1.5B-Instruct, fine-tuned** | **76.8 %** | **68.6 %** | **94.3 %** | **4** |
 
-The 35 test names that should carry an allergen appear in 811 products. The model finds the right allergens for 32 of them, which cover **775 products**.
+The 35 test names that should carry an allergen appear in 811 products. The model finds the right allergens for 33 of them, which cover **787 products**.
+
+On the issue examples, the model gives the right allergen (or the right additive or entry) for **47 of the 49 names**. It finds, among others, `keta salmon` → `en:chum-salmon`, `cashew butter` → new, parent `en:cashew-nuts`, and the Brazilian `farinha de trigo enriquecida com ferro e ácido fólico` → parent `en:fortified-wheat-flour` (gluten). The two misses are `imitation crab` (crustaceans instead of fish: it is surimi) and `bees wax`.
 
 Strict score by cause:
 
 | Why OFF did not recognize it | Cases | Fine-tuned model |
 |---|---:|---:|
 | Right name, wrong declared language | 69 | 98.6 % |
-| Variant, typo, OCR error | 123 | 55.3 % |
-| Not an ingredient | 79 | 75.9 % |
+| Variant, typo, OCR error | 123 | 54.5 % |
+| Not an ingredient | 79 | 74.7 % |
 | List phrase | 6 | 50.0 % |
-| Missing from the taxonomy (new) | 16 | 12.5 % |
+| Missing from the taxonomy (new) | 16 | 25.0 % |
 
-Qwen2.5-3B, fine-tuned the same way, reached 70.0 % strict (+4 cases), for three times the training time. That gain is not worth the extra cost.
+The most frequent error (35 cases) is answering "new, parent X" when the expected answer is "existing X". For example, `poivre de sichuan` → new, parent `en:sichuan-pepper`. The allergens are the same either way, but the taxonomy edit is not. Qwen2.5-3B, fine-tuned the same way, gained only 4 cases for three times the training time.
 
 **Limits.** New ingredients remain the weak spot. With 68.6 % strict accuracy, the model's output should be used as **suggestions reviewed by a contributor**, never as direct edits.
 
@@ -84,3 +89,4 @@ The trained adapter is on the Hugging Face Hub, so no training is needed: `pytho
 | `train.py` | QLoRA fine-tuning and test-set predictions |
 | `infer.py` | linking new names with the trained adapter |
 | `test_gold.jsonl` | the 300 annotated test names |
+| `test_issues.jsonl` | the 49 names from issues #14657 and #14526, with the expected answer |

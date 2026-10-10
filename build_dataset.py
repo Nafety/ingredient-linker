@@ -10,9 +10,11 @@ Each step is skipped when its output already exists in data/:
        real       links actually made by the OFF parser
        corrupted  taxonomy names damaged on purpose (OCR errors, wrong declared language, percentages...)
        new        taxonomy leaves hidden from the index: the expected answer is their parent
+       qualified  taxonomy names with a qualifier that does not change the ingredient ("fresh", "italian"...)
        noise / structure  rule-based picks among real unrecognized names
 Outputs: data/train.jsonl, data/valid.jsonl ({"prompt", "completion", "source"} per line)
 and data/test_prompts.jsonl (the annotated test set test_gold.jsonl, in the same format).
+Names from test_gold.jsonl and test_issues.jsonl never appear in the training data.
 """
 
 from __future__ import annotations
@@ -32,9 +34,11 @@ import pandas as pd
 random.seed(42)
 DATA = Path("data")
 TEST_GOLD = Path("test_gold.jsonl")
+TEST_ISSUES = Path("test_issues.jsonl")  # examples from openfoodfacts-server issues #14657 and #14526
 K = 10  # candidates shown to the model
 EMBEDDER = "intfloat/multilingual-e5-small"
-SIZES = {"real": 12_000, "corrupted": 12_000, "new": 4_000, "noise": 4_000, "noise_short": 5_000, "structure": 2_000}
+SIZES = {"real": 12_000, "corrupted": 12_000, "new": 5_000, "qualified": 4_000, "noise": 4_000, "noise_short": 5_000,
+         "structure": 2_000}
 
 
 # ---------- 1. Taxonomy ----------
@@ -326,7 +330,7 @@ def corrupt(name: str) -> str:
 
 # Short noise: fragments, numbers, units, pieces of addresses or URLs, function words
 SHORT_NOISE = re.compile(
-    r"^(\W*\w{1,3}\W*|\d+([.,]\d+)?\s*(g|kg|mg|µg|ml|cl|l|kj|kcal|%|x)?|https?|www.*|.*\b(org|com|net)\b.*"
+    r"^(\W*\w{1,3}\W*|\d+([.,]\d+)?\s*(g|kg|mg|µg|ml|cl|l|kj|kcal|%|x)?|https?|www.*|.*\.(org|com|net)\b.*"
     r"|p\.?\s?o\.?( box)?|tel.*|fax.*|lot.*|n[°o]\.?\s?\d*)$",
     re.I,
 )
@@ -344,6 +348,15 @@ NOISE = re.compile(
     r"|(www\.|\.com|\.fr|@|poids net|net weight|lot |exp )",
     re.I,
 )
+# Qualifiers that do not make a different ingredient: "fresh almonds" is still en:almond.
+# Composed names that already exist in the taxonomy ("fresh cream"...) are skipped.
+QUALIFIERS = {
+    "en": ["fresh", "natural", "pure", "selected", "premium", "mini", "ripe", "imported", "italian", "french",
+           "spanish", "greek", "belgian", "american"],
+    "fr": ["frais", "naturel", "pur", "sélectionné", "extra", "italien", "français", "espagnol"],
+    "es": ["fresco", "natural", "puro", "seleccionado", "extra", "italiano", "español"],
+    "it": ["fresco", "naturale", "puro", "selezionato", "extra", "italiano"],
+}
 STRUCTURE = re.compile(
     r"(contains? (\d+ ?% )?(or|and) less|less than \d|may contain|peut contenir|traces? (éventuelles|de)|kann spuren"
     r"|puede contener|può contenere|of the following|to preserve freshness|as a preservative|added to)",
@@ -356,6 +369,7 @@ def main() -> None:
         extract_from_export()
     examples: list[dict] = []
     retriever = Retriever()
+    known_names = {k.split(":", 1)[1] for k in tx.synonyms}
 
     def add_batch(items, source):
         """items: (name, lang, context, answer, id that must be among the candidates, or None)"""
@@ -384,7 +398,7 @@ def main() -> None:
 
     # Simulated new ingredients: taxonomy leaves removed from the index
     children = {p for ps in tx.parents.values() for p in ps}
-    leaves = [eid for eid, ps in tx.parents.items() if ps and eid not in children and eid.startswith("en:")]
+    leaves = [eid for eid, ps in tx.parents.items() if ps and eid not in children]
     held_out = set(random.sample(leaves, min(len(leaves), SIZES["new"])))
     hidden = Retriever(exclude=held_out)
     items = []
@@ -397,13 +411,24 @@ def main() -> None:
             random.shuffle(pairs)
             examples.append(example(name, lang, ctx, pairs, answer, "new"))
 
+    # Qualified names: a qualifier that does not change the ingredient, so the answer is the entry itself
+    names = [(eid, lang, n) for eid, e in tx.entries.items() for lang in QUALIFIERS for n in e.names.get(lang, [])
+             if len(n.split()) <= 3]
+    items = []
+    for eid, lang, n in random.sample(names, len(names)):
+        q = random.choice(QUALIFIERS[lang])
+        name = f"{q} {n}" if lang == "en" else f"{n} {q}"
+        if normalize(name) in known_names:
+            continue
+        items.append((name, lang, make_context(name, lang), {"type": "existing", "id": eid}, eid))
+        if len(items) == SIZES["qualified"]:
+            break
+    add_batch(items, "qualified")
+
     # Noise and structure, among real unrecognized names
     unknown = pd.read_parquet(DATA / "unknown_names.parquet")
     unknown["name"] = unknown.id.str.split(":", n=1).str[1].str.replace("-", " ")
-    test_names = {normalize(json.loads(l)["name"]) for l in open(TEST_GOLD, encoding="utf-8")}
-    unknown = unknown[~unknown.name.map(normalize).isin(test_names)]  # never a test name in training
-    known = {k.split(":", 1)[1] for k in tx.synonyms}
-    unknown = unknown[~unknown.name.map(normalize).isin(known)]  # nor a real ingredient name taken for noise
+    unknown = unknown[~unknown.name.map(normalize).isin(known_names)]  # no real ingredient name taken for noise
     stripped = unknown.name.str.strip()
     is_short = stripped.str.match(SHORT_NOISE) | stripped.str.lower().isin(FUNCTION_WORDS)
     is_struct = unknown.name.str.contains(STRUCTURE)
@@ -414,6 +439,10 @@ def main() -> None:
         answer = {"type": "structure"} if kind == "structure" else {"type": "not_ingredient"}
         add_batch([(r.name, r.lang, make_context(r.name, r.lang), answer, None) for r in pick.itertuples()], kind)
 
+    # Never a test name in training, whatever the source
+    test_names = {normalize(json.loads(l)["name"]) for path in (TEST_GOLD, TEST_ISSUES) for l in open(path, encoding="utf-8")}
+    examples = [e for e in examples if normalize(re.search(r'^Unrecognized ingredient: "(.*)"$', e["prompt"], re.M)[1])
+                not in test_names]
     random.shuffle(examples)
     n_valid = len(examples) // 20
     for path, part in [(DATA / "valid.jsonl", examples[:n_valid]), (DATA / "train.jsonl", examples[n_valid:])]:

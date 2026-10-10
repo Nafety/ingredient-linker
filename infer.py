@@ -46,6 +46,9 @@ def main() -> None:
     ]
     for (lang, name, _), p in zip(rows, predict(model, tok, items)):
         decision = p["prediction"]
+        for key in ("id", "parent"):  # an id written slightly off ("en:walnuts") -> the canonical one ("en:walnut")
+            if decision.get(key) and decision[key] not in tx.entries:
+                decision[key] = tx.resolve(decision[key]) or decision[key]
         ref = decision.get("id") or decision.get("parent")
         out = {"name": name, "lang": lang, **decision}
         if ref in tx.entries:

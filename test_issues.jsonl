@@ -1,0 +1,49 @@
+{"issue": "14657", "lang": "en", "name": "almond butter", "expected": {"allergens": ["en:nuts"]}}
+{"issue": "14657", "lang": "en", "name": "cashew butter", "expected": {"allergens": ["en:nuts"]}}
+{"issue": "14657", "lang": "en", "name": "hazelnut butter", "expected": {"allergens": ["en:nuts"]}}
+{"issue": "14657", "lang": "en", "name": "macadamia butter", "expected": {"allergens": ["en:nuts"]}}
+{"issue": "14657", "lang": "en", "name": "almond meal", "expected": {"allergens": ["en:nuts"]}}
+{"issue": "14657", "lang": "en", "name": "filberts", "expected": {"allergens": ["en:nuts"]}}
+{"issue": "14657", "lang": "en", "name": "english walnuts", "expected": {"allergens": ["en:nuts"]}}
+{"issue": "14657", "lang": "en", "name": "black walnuts", "expected": {"allergens": ["en:nuts"]}}
+{"issue": "14657", "lang": "en", "name": "spanish peanuts", "expected": {"allergens": ["en:peanuts"]}}
+{"issue": "14657", "lang": "en", "name": "virginia peanuts", "expected": {"allergens": ["en:peanuts"]}}
+{"issue": "14657", "lang": "en", "name": "valencia peanuts", "expected": {"allergens": ["en:peanuts"]}}
+{"issue": "14657", "lang": "en", "name": "sesame butter", "expected": {"allergens": ["en:sesame-seeds"]}}
+{"issue": "14657", "lang": "en", "name": "light tuna", "expected": {"allergens": ["en:fish"]}}
+{"issue": "14657", "lang": "en", "name": "white tuna", "expected": {"allergens": ["en:fish"]}}
+{"issue": "14657", "lang": "en", "name": "albacore tuna", "expected": {"allergens": ["en:fish"]}}
+{"issue": "14657", "lang": "en", "name": "keta salmon", "expected": {"allergens": ["en:fish"]}}
+{"issue": "14657", "lang": "en", "name": "red salmon", "expected": {"allergens": ["en:fish"]}}
+{"issue": "14657", "lang": "en", "name": "coho salmon", "expected": {"allergens": ["en:fish"]}}
+{"issue": "14657", "lang": "en", "name": "crab meat", "expected": {"allergens": ["en:crustaceans"]}}
+{"issue": "14657", "lang": "en", "name": "snow crab", "expected": {"allergens": ["en:crustaceans"]}}
+{"issue": "14657", "lang": "en", "name": "king crab", "expected": {"allergens": ["en:crustaceans"]}}
+{"issue": "14657", "lang": "en", "name": "lobster meat", "expected": {"allergens": ["en:crustaceans"]}}
+{"issue": "14657", "lang": "en", "name": "imitation crab", "expected": {"allergens": ["en:fish"]}}
+{"issue": "14657", "lang": "en", "name": "semolina wheat flour", "expected": {"allergens": ["en:gluten"]}}
+{"issue": "14657", "lang": "en", "name": "pearled barley", "expected": {"allergens": ["en:gluten"]}}
+{"issue": "14657", "lang": "en", "name": "hydrolyzed wheat gluten", "expected": {"allergens": ["en:gluten"]}}
+{"issue": "14657", "lang": "en", "name": "egg white lysozyme", "expected": {"allergens": ["en:eggs"]}}
+{"issue": "14657", "lang": "en", "name": "egg white protein", "expected": {"allergens": ["en:eggs"]}}
+{"issue": "14657", "lang": "en", "name": "enzyme modified egg yolk", "expected": {"allergens": ["en:eggs"]}}
+{"issue": "14657", "lang": "en", "name": "cage-free eggs", "expected": {"allergens": ["en:eggs"]}}
+{"issue": "14657", "lang": "en", "name": "annatto color", "expected": {"ids": ["en:e160b"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "vegetable glycerin", "expected": {"ids": ["en:e422"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "titanium dioxide color", "expected": {"ids": ["en:e171"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "beta-carotene color", "expected": {"ids": ["en:e160a", "en:e160ai"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "bees wax", "expected": {"ids": ["en:e901"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "methyl paraben", "expected": {"ids": ["en:e218"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "propyl paraben", "expected": {"ids": ["en:e216"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "sodium bisulfate", "expected": {"ids": ["en:e514ii", "en:e514"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "ethyl vanillin", "expected": {"ids": ["en:ethylvanillin"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "maltodextrine", "expected": {"ids": ["en:maltodextrin"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "tomatillos", "expected": {"ids": ["en:tomatillo"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "golden raisins", "expected": {"ids": ["en:golden-raisin"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "green chilies", "expected": {"ids": ["en:green-chili-pepper"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "dietary fiber", "expected": {"ids": ["en:fiber"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "pickles", "expected": {"ids": ["en:pickled-gherkin"], "allergens": []}}
+{"issue": "14657", "lang": "en", "name": "bacterial cultures", "expected": {"ids": ["en:microbial-culture"], "allergens": []}}
+{"issue": "14526", "lang": "pt", "name": "farinha de trigo enriquecida com ferro e ácido fólico", "expected": {"allergens": ["en:gluten"]}}
+{"issue": "14526", "lang": "pt", "name": "farinha de trigo enriquecida com ferro", "expected": {"allergens": ["en:gluten"]}}
+{"issue": "14526", "lang": "pt", "name": "farinha de trigo enriquecida", "expected": {"allergens": ["en:gluten"]}}

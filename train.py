@@ -1,6 +1,6 @@
 """QLoRA fine-tuning of Qwen2.5-1.5B-Instruct on data/train.jsonl, then predictions on the test set.
 
-    python train.py              # about 2.5 h on an 8 GB laptop GPU (RTX 4060)
+    python train.py              # about 4 h on an 8 GB laptop GPU (RTX 4060)
     python train.py --resume     # restart from the last checkpoint in models/run/
 Outputs: models/adapter/ (LoRA weights, about 50 MB) and data/predictions_test.jsonl.
 Tracked in Weights & Biases when a key is configured (`wandb login`).
@@ -78,7 +78,7 @@ def predict(model, tok, items: list[dict], batch: int = 16) -> list[dict]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="Qwen/Qwen2.5-1.5B-Instruct")
-    ap.add_argument("--n-train", type=int, default=20_000)
+    ap.add_argument("--n-train", type=int, default=30_000)
     ap.add_argument("--batch", type=int, default=2, help="examples per pass (effective batch: 16)")
     ap.add_argument("--resume", action="store_true")
     args = ap.parse_args()
