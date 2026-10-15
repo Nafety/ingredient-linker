@@ -20,6 +20,7 @@ Names from test_gold.jsonl and test_issues.jsonl never appear in the training da
 from __future__ import annotations
 
 import json
+import os
 import random
 import re
 import unicodedata
@@ -32,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 random.seed(42)
-DATA = Path("data")
+DATA = Path(os.environ.get("OFF_DATA_DIR", "data"))  # taxonomies, index and generated files
 TEST_GOLD = Path("test_gold.jsonl")
 TEST_ISSUES = Path("test_issues.jsonl")  # examples from openfoodfacts-server issues #14657 and #14526
 K = 10  # candidates shown to the model
